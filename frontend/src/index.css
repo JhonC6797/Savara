@@ -1,0 +1,40 @@
+@import url('https://fonts.googleapis.com/css2?family=David+Libre:wght@400;500;700&family=Frank+Ruhl+Hofshi:wght@400;500;700&family=Assistant:wght@300;400;600&display=swap');
+
+:root {
+  --bg-main: #fbf9f5;
+  --bg-card: #ffffff;
+  --text-primary: #1c1917;
+  --text-muted: #57534e;
+  --border-color: #e7e5e4;
+  --border-dark: #a8a29e;
+  --accent-gold: #8c6d3b;
+  --accent-hover: #6e542d;
+  --font-serif: 'Frank Ruhl Hofshi', 'David Libre', serif;
+  --font-sans: 'Assistant', sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  direction: rtl;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* סגנונות כפתורים גנריים */
+button {
+  font-family: var(--font-sans);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+button:hover {
+  border-color: var(--border-dark);
+  background-color: #f5f5f4;
+}
