@@ -1,4 +1,4 @@
-# backend/reader/router.py
+# backend/reader/catalog_router.py
 from fastapi import APIRouter, HTTPException, Query
 from reader.data.catalog import CATALOG
 import requests
