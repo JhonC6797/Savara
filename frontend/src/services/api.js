@@ -1,13 +1,28 @@
 // frontend/src/services/api.js
-const BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = "http://localhost:8000/api";
 
-export async function fetchCatalog() {
-  const res = await fetch(`${BASE_URL}/catalog`);
-  return res.json();
-}
+export const getCatalog = async () => {
+  const res = await fetch(`${API_BASE_URL}/catalog`);
+  if (!res.ok) throw new Error("Failed to fetch catalog");
+  return await res.json();
+};
 
-export async function fetchText(ref) {
-  const res = await fetch(`${BASE_URL}/text/${encodeURIComponent(ref)}`);
-  if (!res.ok) throw new Error('Network error');
-  return res.json();
-}
+export const getTextSection = async (bookId, sectionId, unit = 1) => {
+  const res = await fetch(`${API_BASE_URL}/text/${bookId}/${sectionId}?unit=${unit}`);
+  if (!res.ok) throw new Error("Failed to fetch text");
+  return await res.json();
+};
+
+// פונקציית החיפוש הסמנטי החדשה
+export const searchTexts = async (query, bookId = "all") => {
+  if (!query || query.trim().length < 2) return [];
+  
+  let url = `${API_BASE_URL}/search?q=${encodeURIComponent(query)}`;
+  if (bookId && bookId !== "all") {
+    url += `&book_id=${encodeURIComponent(bookId)}`;
+  }
+
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Search request failed");
+  return await res.json();
+};

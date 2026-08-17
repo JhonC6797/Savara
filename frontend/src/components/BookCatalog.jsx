@@ -1,77 +1,120 @@
-import React from 'react';
-import { formatHebrewUnit } from '../utils/hebrewNumerals';
+// frontend/src/components/BookCatalog.jsx
+import React, { useEffect, useState } from "react";
+import { getCatalog } from "../services/api";
 
-export default function BookCatalog({ catalog, onSelectSection }) {
-  return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '40px 20px' }}>
-      <div style={{ marginBottom: '40px', borderBottom: '1px solid var(--border-color)', paddingBottom: '20px' }}>
-        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '32px', margin: '0 0 8px 0', fontWeight: '700' }}>
-          ספריית סברא
-        </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '16px', margin: 0 }}>
-          בחר ספר ונושא מבוקש לפתיחת מהדורת הלימוד
-        </p>
-      </div>
+export default function BookCatalog({ onSelectSection }) {
+  const [catalog, setCatalog] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedBook, setSelectedBook] = useState(null);
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(440px, 1fr))', gap: '24px' }}>
-        {catalog.map((book) => (
-          <div
-            key={book.id}
+  useEffect(() => {
+    getCatalog()
+      .then((data) => setCatalog(data || []))
+      .catch((err) => console.error("Error loading catalog:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <div style={{ textAlign: "center", padding: "30px", fontSize: "16px", color: "#2b6cb0" }}>טוען קטלוג ספרים...</div>;
+  }
+
+  if (selectedBook) {
+    return (
+      <div style={{ direction: "rtl", marginTop: "10px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "2px solid #e2e8f0", paddingBottom: "12px" }}>
+          <button
+            onClick={() => setSelectedBook(null)}
             style={{
-              backgroundColor: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              justify: 'space-between'
+              background: "#edf2f7",
+              border: "1px solid #cbd5e1",
+              padding: "8px 16px",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontWeight: "bold",
+              color: "#2d3748"
             }}
           >
-            <div>
-              <span style={{ fontSize: '12px', letterSpacing: '0.5px', color: 'var(--accent-gold)', fontWeight: '600' }}>
-                {book.category}
-              </span>
+            ➔ חזרה לכל הספרים
+          </button>
+          <div style={{ textAlign: "left" }}>
+            <h2 style={{ margin: 0, color: "#1a202c", fontSize: "22px" }}>{selectedBook.title}</h2>
+            <p style={{ margin: "4px 0 0 0", fontSize: "14px", color: "#64748b" }}>{selectedBook.description}</p>
+          </div>
+        </div>
 
-              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '24px', margin: '6px 0', color: 'var(--text-primary)' }}>
-                {book.title}
-              </h2>
-              
-              <div style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '12px' }}>
-                {book.author}
-              </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          {selectedBook.categories?.map((cat, idx) => (
+            <div
+              key={idx}
+              style={{
+                border: "1px solid #e2e8f0",
+                borderRadius: "10px",
+                padding: "18px",
+                backgroundColor: "#ffffff",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+              }}
+            >
+              <h3 style={{ margin: "0 0 12px 0", color: "#1e3a8a", fontSize: "18px", borderBottom: "1px solid #f1f5f9", paddingBottom: "6px" }}>
+                {cat.name}
+              </h3>
 
-              <p style={{ fontSize: '14px', lineHeight: '1.5', color: '#44403c', margin: '0 0 20px 0' }}>
-                {book.description}
-              </p>
-            </div>
-
-            <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-                בחר נושא / חלק ללימוד:
-              </span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {book.sections.map((sec) => (
+              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                {cat.sections?.map((sec) => (
                   <button
                     key={sec.id}
-                    onClick={() => onSelectSection(book, sec)}
+                    onClick={() =>
+                      onSelectSection({
+                        book: selectedBook,
+                        section: sec
+                      })
+                    }
                     style={{
-                      textAlign: 'right',
-                      fontSize: '14px',
-                      padding: '8px 12px',
-                      display: 'flex',
-                      justify: 'space-between',
-                      alignItems: 'center'
+                      padding: "10px 16px",
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "8px",
+                      background: "#f8fafc",
+                      cursor: "pointer",
+                      fontSize: "15px",
+                      fontWeight: "500",
+                      color: "#334155"
                     }}
                   >
-                    <span>{sec.name}</span>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                      {sec.is_single ? 'יחיד' : `עד ${sec.unit_name} ${formatHebrewUnit(sec.max_units)}`}
-                    </span>
+                    {sec.name}
                   </button>
                 ))}
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ direction: "rtl", marginTop: "10px" }}>
+      <h2 style={{ color: "#2c3e50", borderBottom: "2px solid #ecf0f1", paddingBottom: "10px", marginBottom: "20px" }}>
+        ספריית היסוד
+      </h2>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "20px" }}>
+        {Array.isArray(catalog) &&
+          catalog.map((book) => (
+            <div
+              key={book.id}
+              onClick={() => setSelectedBook(book)}
+              style={{
+                border: "1px solid #cbd5e1",
+                borderRadius: "12px",
+                padding: "20px",
+                background: "#ffffff",
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(0,0,0,0.04)"
+              }}
+            >
+              <h3 style={{ margin: "0 0 8px 0", color: "#1e3a8a", fontSize: "20px" }}>{book.title}</h3>
+              <p style={{ margin: 0, fontSize: "14px", color: "#64748b" }}>{book.description}</p>
+            </div>
+          ))}
       </div>
     </div>
   );

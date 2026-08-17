@@ -1,11 +1,30 @@
+# OS / System
+.DS_Store
+Thumbs.db
+*.swp
+
 # Python / Backend
 backend/venv/
 backend/__pycache__/
+backend/*/__pycache__/
+backend/*/*/__pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Search Engine Bulk Data & Vector DB (המקומיים)
+backend/search_engine/raw_data/
+backend/search_engine/data_store/
 
 # Node / Frontend
 frontend/node_modules/
 frontend/dist/
+frontend/build/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
 
-# System
-.DS_Store
+# Environment Variables / Secrets
+.env
+.env.local
+*.env
