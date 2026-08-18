@@ -1,4 +1,3 @@
-# backend/search_engine/router.py
 from fastapi import APIRouter, Query, HTTPException
 from typing import Optional
 from search_engine.embeddings import EmbeddingService
