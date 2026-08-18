@@ -1,25 +1,25 @@
-# backend/search_engine/embeddings.py
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
+from typing import List, Union
 
-class EmbeddingService:
-    def __init__(self, model_name: str = "intfloat/multilingual-e5-small"):
-        self.model_name = model_name
-        self.model = None
+_model = None
 
-    def load_model(self):
-        if not self.model:
-            self.model = SentenceTransformer(self.model_name)
+def get_embedding_model() -> TextEmbedding:
+    global _model
+    if _model is None:
+        # טעינת מודל רזה ומהיר שרץ ללא PyTorch/CUDA וצורך ~100MB RAM בלבד
+        _model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
+    return _model
 
-    def encode_text(self, text: str, is_query: bool = True) -> list:
-        if not self.model:
-            self.load_model()
-        # מודל E5 דורש קידומת query: בשאילתות
-        prefix = "query: " if is_query else "passage: "
-        formatted_text = f"{prefix}{text}"
-        return self.model.encode(formatted_text).tolist()
+def get_embeddings(texts: Union[str, List[str]]) -> List[List[float]]:
+    """יוצר וקטורים עבור טקסט יחיד או רשימת טקסטים"""
+    if isinstance(texts, str):
+        texts = [texts]
+    
+    model = get_embedding_model()
+    embeddings = list(model.embed(texts))
+    return [e.tolist() for e in embeddings]
 
-    def encode_batch(self, texts: list) -> list:
-        if not self.model:
-            self.load_model()
-        formatted_texts = [f"passage: {t}" for t in texts]
-        return self.model.encode(formatted_texts).tolist()
+def get_single_embedding(text: str) -> List[float]:
+    """יוצר וקטור עבור מחרוזת בודדת (עבור שאילתת חיפוש)"""
+    res = get_embeddings(text)
+    return res[0] if res else []
