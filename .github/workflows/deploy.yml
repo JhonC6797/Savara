@@ -17,17 +17,11 @@ jobs:
         with:
           node-version: 22
 
-      - name: Build Frontend PWA
-        run: |
-          cd frontend
-          npm ci
-          npm run build
-
       - name: Trigger Backend Deploy (Render)
         run: |
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
 
-      - name: Trigger Frontend Deploy (Vercel)
+      - name: Deploy Frontend to Vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -35,7 +29,5 @@ jobs:
         run: |
           cd frontend
           mkdir -p .vercel
-          echo "{\"projectId\":\"$VERCEL_PROJECT_ID\",\"orgId\":\"$VERCEL_ORG_ID\"}" > .vercel/project.json
-          npx vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-          npx vercel build --prod --token=$VERCEL_TOKEN
-          npx vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+          echo '{"projectId":"'"$VERCEL_PROJECT_ID"'","orgId":"'"$VERCEL_ORG_ID"'"}' > .vercel/project.json
+          npx vercel --prod --token=$VERCEL_TOKEN --yes
