@@ -1,5 +1,6 @@
 // frontend/src/services/api.js
-const API_BASE_URL = "http://localhost:8000/api";
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+fetch(`${API_URL}/api/catalog`)
 
 export const getCatalog = async () => {
   const res = await fetch(`${API_BASE_URL}/catalog`);
