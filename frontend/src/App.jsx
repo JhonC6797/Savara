@@ -3,6 +3,34 @@ import React, { useState, useEffect, useMemo } from "react";
 import BookCatalog from "./components/BookCatalog";
 import SearchBar from "./components/SearchBar";
 import { getCatalog, getTextSection } from "./services/api";
+import React, { useState } from 'react';
+import SettingsModal from './components/SettingsModal';
+
+
+function App() {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors">
+      {/* כפתור הגדרות צף בפינה */}
+      <button
+        onClick={() => setIsSettingsOpen(true)}
+        className="fixed top-4 left-4 z-40 bg-white dark:bg-slate-800 p-2.5 rounded-full shadow-md border border-gray-200 dark:border-gray-700 text-xl"
+        title="הגדרות"
+      >
+        ⚙️
+      </button>
+
+      {/* מודאל ההגדרות */}
+      <SettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)} 
+      />
+
+      {/* יתר תוכן האפליקציה שלך */}
+    </div>
+  );
+}
 
 const stripHtml = (htmlString) => {
   if (typeof htmlString !== "string") return htmlString;
