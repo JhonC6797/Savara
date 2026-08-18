@@ -14,7 +14,7 @@ const stripHtml = (htmlString) => {
 };
 
 export default function App() {
-  const [view, setView] = useState("catalog"); // 'catalog' | 'reader' | 'settings'
+  const [view, setView] = useState("catalog");
   const [previousView, setPreviousView] = useState("catalog");
   
   const [catalog, setCatalog] = useState([]);
@@ -134,21 +134,21 @@ export default function App() {
   const unitLabel = selectedSectionObj?.unit_label || "יחידה";
   const paragraphs = Array.isArray(textData?.sections) ? textData.sections : [];
 
-  // הצגת מסך ההגדרות במצב מסך מלא
   if (view === "settings") {
     return <SettingsPage onBack={() => setView(previousView)} />;
   }
 
   return (
     <div 
-      className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-slate-100 transition-colors"
+      className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-slate-100 transition-colors w-full overflow-x-hidden"
       style={{
         maxWidth: "1000px",
         margin: "0 auto",
         padding: "16px",
         fontFamily: "system-ui, -apple-system, sans-serif",
         direction: "rtl",
-        textAlign: "right"
+        textAlign: "right",
+        boxSizing: "border-box"
       }}
     >
       {/* כפתור הגדרות צף */}
@@ -162,7 +162,7 @@ export default function App() {
 
       {/* כותרת ראשית */}
       <header style={{ textAlign: "center", marginBottom: "20px", marginTop: "10px" }}>
-        <h1 style={{ color: "#1e3a8a", margin: "0 0 6px 0", fontSize: "28px", fontWeight: "bold" }} className="dark:text-white">
+        <h1 style={{ color: "#1e3a8a", margin: "0 0 6px 0", fontSize: "26px", fontWeight: "bold" }} className="dark:text-white">
           סברא - מנוע לימוד תורני
         </h1>
         <p style={{ color: "#64748b", margin: 0, fontSize: "14px" }} className="dark:text-zinc-400">
@@ -170,10 +170,8 @@ export default function App() {
         </p>
       </header>
 
-      {/* רכיב חיפוש */}
       <SearchBar onSelectResult={handleSelectFromSearch} />
 
-      {/* הודעת טעינה */}
       {loading && (
         <div style={{ textAlign: "center", padding: "40px", fontSize: "16px", color: "#2563eb", fontWeight: "bold" }}>
           טוען טקסט...
@@ -186,33 +184,35 @@ export default function App() {
           className="dark:bg-zinc-900 dark:border-zinc-800"
           style={{
             backgroundColor: "#ffffff",
-            padding: "24px",
+            padding: "16px",
             borderRadius: "14px",
             border: "1px solid #e2e8f0",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+            width: "100%",
+            boxSizing: "border-box"
           }}
         >
-          {/* סרגל ניווט עליון בתוך הספר */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid #f1f5f9", paddingBottom: "14px", gap: "12px", flexWrap: "wrap" }}>
+          {/* סרגל עליון: חזרה ובחירת הלכה מוגבלת רוחב לנייד */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid #f1f5f9", paddingBottom: "12px", gap: "10px", flexWrap: "wrap" }}>
             <button
               onClick={() => setView("catalog")}
               className="dark:bg-zinc-800 dark:text-slate-200"
               style={{
                 backgroundColor: "#f1f5f9",
                 border: "none",
-                padding: "8px 16px",
+                padding: "8px 14px",
                 borderRadius: "8px",
                 cursor: "pointer",
                 fontWeight: "bold",
                 color: "#334155",
-                fontSize: "14px"
+                fontSize: "13px"
               }}
             >
               ➔ חזרה לקטלוג
             </button>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontWeight: "bold", fontSize: "16px" }} className="dark:text-white">
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", maxWidth: "100%" }}>
+              <span style={{ fontWeight: "bold", fontSize: "15px", whiteSpace: "nowrap" }} className="dark:text-white">
                 {selectedBookObj.title}:
               </span>
               
@@ -221,15 +221,17 @@ export default function App() {
                 onChange={handleSectionSwitch}
                 className="dark:bg-zinc-800 dark:text-white dark:border-zinc-700"
                 style={{
-                  padding: "6px 12px",
+                  padding: "6px 10px",
                   borderRadius: "8px",
                   border: "1px solid #cbd5e1",
-                  fontSize: "14px",
+                  fontSize: "13px",
                   fontWeight: "bold",
                   color: "#1e293b",
                   backgroundColor: "#f8fafc",
                   cursor: "pointer",
-                  direction: "rtl"
+                  direction: "rtl",
+                  maxWidth: "200px",
+                  textOverflow: "ellipsis"
                 }}
               >
                 {currentBookSections.map((sec) => (
@@ -241,7 +243,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* סרגל ניווט יחידות / פרקים */}
+          {/* סרגל מעבר בין יחידות/פרקים */}
           <div 
             className="dark:bg-zinc-800/60 dark:border-zinc-700/60"
             style={{
@@ -249,12 +251,14 @@ export default function App() {
               justifyContent: "space-between",
               alignItems: "center",
               backgroundColor: "#f8fafc",
-              padding: "12px 16px",
+              padding: "10px 12px",
               borderRadius: "10px",
               marginBottom: "20px",
               border: "1px solid #e2e8f0",
-              gap: "10px",
-              flexWrap: "wrap"
+              gap: "8px",
+              flexWrap: "wrap",
+              width: "100%",
+              boxSizing: "border-box"
             }}
           >
             <button
@@ -262,22 +266,22 @@ export default function App() {
               disabled={currentUnit <= 1}
               className="dark:bg-zinc-800 dark:text-slate-200"
               style={{
-                padding: "6px 14px",
+                padding: "6px 12px",
                 borderRadius: "8px",
                 border: "1px solid #cbd5e1",
                 backgroundColor: currentUnit <= 1 ? "#e2e8f0" : "#ffffff",
                 color: currentUnit <= 1 ? "#94a3b8" : "#1e293b",
                 cursor: currentUnit <= 1 ? "not-allowed" : "pointer",
                 fontWeight: "bold",
-                fontSize: "13px"
+                fontSize: "12px"
               }}
             >
               ◄ {unitLabel} הקודם
             </button>
 
-            <form onSubmit={handleJumpSubmit} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "14px", color: "#475569" }} className="dark:text-zinc-300">
-                {unitLabel} {currentUnit} מתוך {maxUnits}:
+            <form onSubmit={handleJumpSubmit} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ fontSize: "13px", color: "#475569" }} className="dark:text-zinc-300">
+                {unitLabel} {currentUnit}/{maxUnits}:
               </span>
               <input
                 type="number"
@@ -287,24 +291,24 @@ export default function App() {
                 max={maxUnits}
                 className="dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
                 style={{
-                  width: "60px",
-                  padding: "4px 8px",
+                  width: "50px",
+                  padding: "4px 6px",
                   borderRadius: "6px",
                   border: "1px solid #cbd5e1",
                   textAlign: "center",
-                  fontSize: "14px"
+                  fontSize: "13px"
                 }}
               />
               <button
                 type="submit"
                 style={{
-                  padding: "5px 12px",
+                  padding: "4px 10px",
                   borderRadius: "6px",
                   border: "none",
                   backgroundColor: "#1e3a8a",
                   color: "#ffffff",
                   cursor: "pointer",
-                  fontSize: "13px",
+                  fontSize: "12px",
                   fontWeight: "bold"
                 }}
               >
@@ -317,14 +321,14 @@ export default function App() {
               disabled={currentUnit >= maxUnits}
               className="dark:bg-zinc-800 dark:text-slate-200"
               style={{
-                padding: "6px 14px",
+                padding: "6px 12px",
                 borderRadius: "8px",
                 border: "1px solid #cbd5e1",
                 backgroundColor: currentUnit >= maxUnits ? "#e2e8f0" : "#ffffff",
                 color: currentUnit >= maxUnits ? "#94a3b8" : "#1e293b",
                 cursor: currentUnit >= maxUnits ? "not-allowed" : "pointer",
                 fontWeight: "bold",
-                fontSize: "13px"
+                fontSize: "12px"
               }}
             >
               {unitLabel} הבא ►
@@ -332,7 +336,7 @@ export default function App() {
           </div>
 
           {/* גוף הטקסט */}
-          <div style={{ lineHeight: "2.1", fontSize: "18px" }}>
+          <div style={{ lineHeight: "2.0", fontSize: "18px", wordBreak: "break-word" }}>
             {paragraphs.length > 0 ? (
               paragraphs.map((paragraph, idx) => {
                 const isHighlighted = idx + 1 === highlightParagraph;
@@ -340,7 +344,7 @@ export default function App() {
                   <p
                     key={idx}
                     style={{
-                      padding: "10px 14px",
+                      padding: "8px 12px",
                       borderRadius: "8px",
                       backgroundColor: isHighlighted ? "#fef08a" : "transparent",
                       color: isHighlighted ? "#000000" : "inherit",
@@ -348,7 +352,7 @@ export default function App() {
                       marginBottom: "8px"
                     }}
                   >
-                    <strong style={{ marginLeft: "10px", color: "#94a3b8", fontSize: "14px" }}>[{idx + 1}]</strong>
+                    <strong style={{ marginLeft: "8px", color: "#94a3b8", fontSize: "14px" }}>[{idx + 1}]</strong>
                     {stripHtml(paragraph)}
                   </p>
                 );
@@ -360,7 +364,7 @@ export default function App() {
         </div>
       )}
 
-      {/* מסך קטלוג ספרים */}
+      {/* מסך קטלוג */}
       {view === "catalog" && !loading && (
         <BookCatalog 
           catalog={catalog} 
