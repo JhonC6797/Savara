@@ -2,35 +2,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import BookCatalog from "./components/BookCatalog";
 import SearchBar from "./components/SearchBar";
+import SettingsPage from "./components/SettingsPage";
 import { getCatalog, getTextSection } from "./services/api";
-import React, { useState } from 'react';
-import SettingsModal from './components/SettingsModal';
-
-
-function App() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors">
-      {/* כפתור הגדרות צף בפינה */}
-      <button
-        onClick={() => setIsSettingsOpen(true)}
-        className="fixed top-4 left-4 z-40 bg-white dark:bg-slate-800 p-2.5 rounded-full shadow-md border border-gray-200 dark:border-gray-700 text-xl"
-        title="הגדרות"
-      >
-        ⚙️
-      </button>
-
-      {/* מודאל ההגדרות */}
-      <SettingsModal 
-        isOpen={isSettingsOpen} 
-        onClose={() => setIsSettingsOpen(false)} 
-      />
-
-      {/* יתר תוכן האפליקציה שלך */}
-    </div>
-  );
-}
 
 const stripHtml = (htmlString) => {
   if (typeof htmlString !== "string") return htmlString;
@@ -41,9 +14,10 @@ const stripHtml = (htmlString) => {
 };
 
 export default function App() {
-  const [view, setView] = useState("catalog");
-  const [catalog, setCatalog] = useState([]);
+  const [view, setView] = useState("catalog"); // 'catalog' | 'reader' | 'settings'
+  const [previousView, setPreviousView] = useState("catalog");
   
+  const [catalog, setCatalog] = useState([]);
   const [selectedBookObj, setSelectedBookObj] = useState(null);
   const [selectedSectionObj, setSelectedSectionObj] = useState(null);
   const [currentUnit, setCurrentUnit] = useState(1);
@@ -58,6 +32,11 @@ export default function App() {
       .then((data) => setCatalog(data || []))
       .catch((err) => console.error("Error fetching catalog:", err));
   }, []);
+
+  const openSettings = () => {
+    setPreviousView(view);
+    setView("settings");
+  };
 
   const findSectionInCatalog = (catalogList, bookId, sectionId) => {
     const book = catalogList.find((b) => b.id === bookId);
@@ -78,33 +57,32 @@ export default function App() {
     return { book, section: null };
   };
 
-  // בתוך frontend/src/App.jsx
+  const fetchAndShowText = async (bookObj, sectionObj, unitNum, pHighlight = null) => {
+    if (!sectionObj) return;
 
-const fetchAndShowText = async (bookObj, sectionObj, unitNum, pHighlight = null) => {
-  if (!sectionObj) return;
+    const maxUnits = sectionObj.max_units || 1;
+    let validUnit = parseInt(unitNum, 10);
+    if (isNaN(validUnit) || validUnit < 1) validUnit = 1;
+    if (validUnit > maxUnits) validUnit = maxUnits;
 
-  const maxUnits = sectionObj.max_units || 1;
-  let validUnit = parseInt(unitNum, 10);
-  if (isNaN(validUnit) || validUnit < 1) validUnit = 1;
-  if (validUnit > maxUnits) validUnit = maxUnits;
+    setLoading(true);
+    try {
+      const data = await getTextSection(bookObj.id, sectionObj.id, validUnit);
+      setSelectedBookObj(bookObj);
+      setSelectedSectionObj(sectionObj);
+      setCurrentUnit(validUnit);
+      setJumpInput(String(validUnit));
+      setTextData(data);
+      setHighlightParagraph(pHighlight);
+      setView("reader");
+    } catch (err) {
+      console.error("Error loading section:", err);
+      alert(`לא ניתן היה לטעון את הטקסט עבור "${sectionObj.name}".`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  setLoading(true);
-  try {
-    const data = await getTextSection(bookObj.id, sectionObj.id, validUnit);
-    setSelectedBookObj(bookObj);
-    setSelectedSectionObj(sectionObj);
-    setCurrentUnit(validUnit);
-    setJumpInput(String(validUnit));
-    setTextData(data);
-    setHighlightParagraph(pHighlight);
-    setView("reader");
-  } catch (err) {
-    console.error("Error loading section:", err);
-    alert(`לא ניתן היה שטוען את הטקסט עבור "${sectionObj.name}". ודא ששרת האינטרנט זמין.`);
-  } finally {
-    setLoading(false);
-  }
-};
   const handleSelectFromCatalog = (data) => {
     if (data.book && data.section) {
       fetchAndShowText(data.book, data.section, 1, null);
@@ -156,43 +134,97 @@ const fetchAndShowText = async (bookObj, sectionObj, unitNum, pHighlight = null)
   const unitLabel = selectedSectionObj?.unit_label || "יחידה";
   const paragraphs = Array.isArray(textData?.sections) ? textData.sections : [];
 
+  // הצגת מסך ההגדרות במצב מסך מלא
+  if (view === "settings") {
+    return <SettingsPage onBack={() => setView(previousView)} />;
+  }
+
   return (
-    <div style={{ maxWidth: "1000px", margin: "0 auto", padding: "20px", fontFamily: "sans-serif", direction: "rtl" }}>
-      <header style={{ textAlign: "center", marginBottom: "25px" }}>
-        <h1 style={{ color: "#2c3e50", margin: "0 0 6px 0" }}>סברא - מנוע לימוד תורני</h1>
-        <p style={{ color: "#7f8c8d", margin: 0 }}>קריאה, עיון וחיפוש סמנטי בספרי יסוד</p>
+    <div 
+      className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-slate-100 transition-colors"
+      style={{
+        maxWidth: "1000px",
+        margin: "0 auto",
+        padding: "16px",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+        direction: "rtl",
+        textAlign: "right"
+      }}
+    >
+      {/* כפתור הגדרות צף */}
+      <button
+        onClick={openSettings}
+        className="fixed top-4 left-4 z-40 bg-white dark:bg-zinc-800 text-slate-800 dark:text-slate-100 p-3 rounded-full shadow-md border border-slate-200 dark:border-zinc-700 text-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+        title="הגדרות"
+      >
+        ⚙️
+      </button>
+
+      {/* כותרת ראשית */}
+      <header style={{ textAlign: "center", marginBottom: "20px", marginTop: "10px" }}>
+        <h1 style={{ color: "#1e3a8a", margin: "0 0 6px 0", fontSize: "28px", fontWeight: "bold" }} className="dark:text-white">
+          סברא - מנוע לימוד תורני
+        </h1>
+        <p style={{ color: "#64748b", margin: 0, fontSize: "14px" }} className="dark:text-zinc-400">
+          קריאה, עיון וחיפוש סמנטי בספרי יסוד
+        </p>
       </header>
 
+      {/* רכיב חיפוש */}
       <SearchBar onSelectResult={handleSelectFromSearch} />
 
+      {/* הודעת טעינה */}
       {loading && (
-        <div style={{ textAlign: "center", padding: "40px", fontSize: "16px", color: "#2b6cb0" }}>
+        <div style={{ textAlign: "center", padding: "40px", fontSize: "16px", color: "#2563eb", fontWeight: "bold" }}>
           טוען טקסט...
         </div>
       )}
 
+      {/* מסך קריאה בספר */}
       {view === "reader" && !loading && textData && selectedBookObj && selectedSectionObj && (
-        <div style={{ background: "#ffffff", padding: "25px", borderRadius: "10px", border: "1px solid #e2e8f0", boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
-          
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid #edf2f7", paddingBottom: "12px", gap: "10px", flexWrap: "wrap" }}>
+        <div 
+          className="dark:bg-zinc-900 dark:border-zinc-800"
+          style={{
+            backgroundColor: "#ffffff",
+            padding: "24px",
+            borderRadius: "14px",
+            border: "1px solid #e2e8f0",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)"
+          }}
+        >
+          {/* סרגל ניווט עליון בתוך הספר */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid #f1f5f9", paddingBottom: "14px", gap: "12px", flexWrap: "wrap" }}>
             <button
               onClick={() => setView("catalog")}
-              style={{ background: "#edf2f7", border: "none", padding: "8px 16px", borderRadius: "6px", cursor: "pointer", fontWeight: "bold", color: "#2d3748" }}
+              className="dark:bg-zinc-800 dark:text-slate-200"
+              style={{
+                backgroundColor: "#f1f5f9",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "bold",
+                color: "#334155",
+                fontSize: "14px"
+              }}
             >
               ➔ חזרה לקטלוג
             </button>
 
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontWeight: "bold", color: "#2c3e50" }}>{selectedBookObj.title}:</span>
+              <span style={{ fontWeight: "bold", fontSize: "16px" }} className="dark:text-white">
+                {selectedBookObj.title}:
+              </span>
               
               <select
                 value={selectedSectionObj.id}
                 onChange={handleSectionSwitch}
+                className="dark:bg-zinc-800 dark:text-white dark:border-zinc-700"
                 style={{
                   padding: "6px 12px",
-                  borderRadius: "6px",
+                  borderRadius: "8px",
                   border: "1px solid #cbd5e1",
-                  fontSize: "15px",
+                  fontSize: "14px",
                   fontWeight: "bold",
                   color: "#1e293b",
                   backgroundColor: "#f8fafc",
@@ -209,25 +241,42 @@ const fetchAndShowText = async (bookObj, sectionObj, unitNum, pHighlight = null)
             </div>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc", padding: "10px 16px", borderRadius: "8px", marginBottom: "20px", border: "1px solid #e2e8f0", gap: "10px", flexWrap: "wrap" }}>
-            
+          {/* סרגל ניווט יחידות / פרקים */}
+          <div 
+            className="dark:bg-zinc-800/60 dark:border-zinc-700/60"
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              backgroundColor: "#f8fafc",
+              padding: "12px 16px",
+              borderRadius: "10px",
+              marginBottom: "20px",
+              border: "1px solid #e2e8f0",
+              gap: "10px",
+              flexWrap: "wrap"
+            }}
+          >
             <button
               onClick={() => handleUnitChange(-1)}
               disabled={currentUnit <= 1}
+              className="dark:bg-zinc-800 dark:text-slate-200"
               style={{
                 padding: "6px 14px",
-                borderRadius: "6px",
+                borderRadius: "8px",
                 border: "1px solid #cbd5e1",
-                background: currentUnit <= 1 ? "#e2e8f0" : "#ffffff",
+                backgroundColor: currentUnit <= 1 ? "#e2e8f0" : "#ffffff",
                 color: currentUnit <= 1 ? "#94a3b8" : "#1e293b",
-                cursor: currentUnit <= 1 ? "not-allowed" : "pointer"
+                cursor: currentUnit <= 1 ? "not-allowed" : "pointer",
+                fontWeight: "bold",
+                fontSize: "13px"
               }}
             >
               ◄ {unitLabel} הקודם
             </button>
 
             <form onSubmit={handleJumpSubmit} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "14px", color: "#475569" }}>
+              <span style={{ fontSize: "14px", color: "#475569" }} className="dark:text-zinc-300">
                 {unitLabel} {currentUnit} מתוך {maxUnits}:
               </span>
               <input
@@ -236,9 +285,29 @@ const fetchAndShowText = async (bookObj, sectionObj, unitNum, pHighlight = null)
                 onChange={(e) => setJumpInput(e.target.value)}
                 min={1}
                 max={maxUnits}
-                style={{ width: "65px", padding: "4px 8px", borderRadius: "4px", border: "1px solid #cbd5e1", textAlign: "center" }}
+                className="dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
+                style={{
+                  width: "60px",
+                  padding: "4px 8px",
+                  borderRadius: "6px",
+                  border: "1px solid #cbd5e1",
+                  textAlign: "center",
+                  fontSize: "14px"
+                }}
               />
-              <button type="submit" style={{ padding: "4px 10px", borderRadius: "4px", border: "none", background: "#2c3e50", color: "#fff", cursor: "pointer", fontSize: "13px" }}>
+              <button
+                type="submit"
+                style={{
+                  padding: "5px 12px",
+                  borderRadius: "6px",
+                  border: "none",
+                  backgroundColor: "#1e3a8a",
+                  color: "#ffffff",
+                  cursor: "pointer",
+                  fontSize: "13px",
+                  fontWeight: "bold"
+                }}
+              >
                 עבור
               </button>
             </form>
@@ -246,20 +315,24 @@ const fetchAndShowText = async (bookObj, sectionObj, unitNum, pHighlight = null)
             <button
               onClick={() => handleUnitChange(1)}
               disabled={currentUnit >= maxUnits}
+              className="dark:bg-zinc-800 dark:text-slate-200"
               style={{
                 padding: "6px 14px",
-                borderRadius: "6px",
+                borderRadius: "8px",
                 border: "1px solid #cbd5e1",
-                background: currentUnit >= maxUnits ? "#e2e8f0" : "#ffffff",
+                backgroundColor: currentUnit >= maxUnits ? "#e2e8f0" : "#ffffff",
                 color: currentUnit >= maxUnits ? "#94a3b8" : "#1e293b",
-                cursor: currentUnit >= maxUnits ? "not-allowed" : "pointer"
+                cursor: currentUnit >= maxUnits ? "not-allowed" : "pointer",
+                fontWeight: "bold",
+                fontSize: "13px"
               }}
             >
               {unitLabel} הבא ►
             </button>
           </div>
 
-          <div style={{ lineHeight: "2.0", fontSize: "18px", color: "#2d3748" }}>
+          {/* גוף הטקסט */}
+          <div style={{ lineHeight: "2.1", fontSize: "18px" }}>
             {paragraphs.length > 0 ? (
               paragraphs.map((paragraph, idx) => {
                 const isHighlighted = idx + 1 === highlightParagraph;
@@ -267,27 +340,32 @@ const fetchAndShowText = async (bookObj, sectionObj, unitNum, pHighlight = null)
                   <p
                     key={idx}
                     style={{
-                      padding: "8px 12px",
-                      borderRadius: "6px",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
                       backgroundColor: isHighlighted ? "#fef08a" : "transparent",
+                      color: isHighlighted ? "#000000" : "inherit",
                       borderRight: isHighlighted ? "4px solid #eab308" : "none",
-                      transition: "background-color 0.3s"
+                      marginBottom: "8px"
                     }}
                   >
-                    <strong style={{ marginLeft: "10px", color: "#a0aec0", fontSize: "14px" }}>[{idx + 1}]</strong>
+                    <strong style={{ marginLeft: "10px", color: "#94a3b8", fontSize: "14px" }}>[{idx + 1}]</strong>
                     {stripHtml(paragraph)}
                   </p>
                 );
               })
             ) : (
-              <p style={{ color: "#a0aec0", textAlign: "center" }}>אין טקסט להצגה ביחידה זו.</p>
+              <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px" }}>אין טקסט להצגה ביחידה זו.</p>
             )}
           </div>
         </div>
       )}
 
+      {/* מסך קטלוג ספרים */}
       {view === "catalog" && !loading && (
-        <BookCatalog onSelectSection={handleSelectFromCatalog} />
+        <BookCatalog 
+          catalog={catalog} 
+          onSelectSection={handleSelectFromCatalog} 
+        />
       )}
     </div>
   );
