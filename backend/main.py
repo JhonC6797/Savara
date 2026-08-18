@@ -1,11 +1,6 @@
 # backend/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import os, torch
-
-os.environ["OMP_NUM_THREADS"] = "1"
-os.environ["MKL_NUM_THREADS"] = "1"
-torch.set_num_threads(1)
 
 from reader.routers.catalog_router import router as catalog_router
 from reader.routers.text_router import router as text_router
