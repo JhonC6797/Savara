@@ -1,20 +1,16 @@
 name: CI/CD Pipeline - Svara
-# 1. יצירת התיקייה הנכונה
-mkdir -p .github/workflows
-
-# 2. יצירת הקובץ deploy.yml עם התוכן המלא
-cat << 'EOF' > .github/workflows/deploy.yml
-name: CI/CD Pipeline - Svara
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -29,7 +25,7 @@ jobs:
 
       - name: Trigger Backend Deploy (Render)
         run: |
-          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
 
       - name: Trigger Frontend Deploy (Vercel)
         uses: amondnet/vercel-action@v25
