@@ -1,62 +1,90 @@
-# backend/reader/routers/text_router.py
 import re
 import requests
-from urllib.parse import quote
 from fastapi import APIRouter, HTTPException, Query
-from reader.data.catalog import CATALOG
+from utils.hebrew import hebrew_to_int, clean_text_formatting
+from reader.routers.catalog_router import find_section
 
 router = APIRouter(prefix="/api", tags=["Text"])
 
-def clean_text(text: str) -> str:
-    if not text:
-        return ""
-    cleaned = re.sub(r'<[^>]+>', '', text)
-    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
-    return cleaned
+def extract_start_unit(section_name: str) -> int:
+    """חילוץ סימן/פרק ההתחלה מתוך שם החטיבה בקטלוג"""
+    match_bracket = re.search(r'\(([\u05D0-\u05EA]+)(?:-[\u05D0-\u05EA]+)?\)', section_name)
+    if match_bracket:
+        val = hebrew_to_int(match_bracket.group(1))
+        if val > 0:
+            return val
 
-def get_section_meta(book_id: str, section_id: str):
-    for book in CATALOG:
-        if book["id"] == book_id:
-            for cat in book.get("categories", []):
-                for sec in cat.get("sections", []):
-                    if sec["id"] == section_id:
-                        return book, sec
-    return None, None
+    match_unit = re.search(r'(?:פרקי?ם?|סימני?ם?)\s+([\u05D0-\u05EA]+)', section_name)
+    if match_unit:
+        val = hebrew_to_int(match_unit.group(1))
+        if val > 0:
+            return val
 
+    return 1
+
+@router.get("/text")
+@router.get("/section")
+@router.get("/reader/text")
 @router.get("/text/{book_id}/{section_id}")
-def get_text_section(book_id: str, section_id: str, unit: int = Query(1, ge=1)):
-    book, section = get_section_meta(book_id, section_id)
-    if not section:
+@router.get("/text/{book_id}/{section_id}/{unit_path}")
+def get_text_section(
+    book_id: str | None = None,
+    section_id: str | None = None,
+    unit_path: int | None = None,
+    sub_book: str | None = Query(None),
+    section: str | None = Query(None),
+    unit: int | None = Query(None),
+    chapter: int | None = Query(None),
+    siman: int | None = Query(None),
+    page: int | None = Query(None),
+    ref: str | None = Query(None)
+):
+    target_section = section_id or section or sub_book or ref
+    raw_unit = unit_path or unit or chapter or siman or page or 1
+
+    book, sec_meta = find_section(book_id, target_section)
+
+    if not sec_meta:
         raise HTTPException(status_code=404, detail="החטיבה המבוקשת לא נמצאה בקטלוג")
 
-    base_ref = section["base_ref"]
-    raw_ref = f"{base_ref}.{unit}"
-    
-    # ניסיון פנייה ישירה
-    encoded_ref = quote(raw_ref)
-    url = f"https://www.sefaria.org/api/texts/{encoded_ref}?context=0&commentary=0"
-    
+    base_ref = sec_meta["base_ref"]
+    section_name = sec_meta.get("name", "")
+
+    start_unit = extract_start_unit(section_name)
+
+    if raw_unit < start_unit:
+        actual_unit = start_unit + raw_unit - 1
+    else:
+        actual_unit = raw_unit
+
+    url = f"https://www.sefaria.org/api/v3/texts/{base_ref}.{actual_unit}?context=0"
+
     try:
         res = requests.get(url, timeout=10)
+        if res.status_code != 200:
+            url_alt = f"https://www.sefaria.org/api/v3/texts/{base_ref} {actual_unit}?context=0"
+            res = requests.get(url_alt, timeout=10)
+
         if res.status_code == 200:
             data = res.json()
-            raw_paragraphs = data.get("he", [])
-            
-            if isinstance(raw_paragraphs, str):
-                raw_paragraphs = [raw_paragraphs]
-                
-            cleaned_paragraphs = [clean_text(p) for p in raw_paragraphs if p]
-            
-            if cleaned_paragraphs:
-                return {
-                    "ref": raw_ref,
-                    "sections": cleaned_paragraphs
-                }
-        
-        # הדפסת דיבאג לטרמינל במידה ונכשל
-        print(f"[Sefaria Fetch Error] URL failed: {url} | Status: {res.status_code}")
-        raise HTTPException(status_code=404, detail=f"הטקסט עבור {raw_ref} לא נמצא בספריא")
-        
+            versions = data.get("versions", [])
+            hebrew_version = next((v for v in versions if v.get("language") == "he"), None)
+            if not hebrew_version and versions:
+                hebrew_version = versions[0]
+
+            paragraphs = hebrew_version.get("text", []) if hebrew_version else []
+            if isinstance(paragraphs, str):
+                paragraphs = [paragraphs]
+
+            cleaned_paragraphs = [clean_text_formatting(p) for p in paragraphs if p]
+
+            return {
+                "ref": f"{base_ref}.{actual_unit}",
+                "sections": cleaned_paragraphs,
+                "text": cleaned_paragraphs,
+                "paragraphs": cleaned_paragraphs
+            }
+        else:
+            raise HTTPException(status_code=res.status_code, detail="הטקסט לא נמצא בספריא")
     except Exception as e:
-        print(f"[Sefaria Exception] {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

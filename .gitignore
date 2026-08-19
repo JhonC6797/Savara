@@ -3,7 +3,7 @@
 Thumbs.db
 *.swp
 
-# Python / Backend
+# Python / Virtual Env
 backend/venv/
 backend/__pycache__/
 backend/*/__pycache__/
@@ -12,17 +12,17 @@ backend/*/*/__pycache__/
 *.pyo
 *.pyd
 
-# Search Engine Bulk Data & Vector DB (המקומיים)
-backend/search_engine/raw_data/
+# Vector DB Storage (החרגה מלאה של תיקיית הווקטורים)
+backend/qdrant_db/
+backend/search_engine/qdrant_db/
+**/qdrant_db/
 backend/search_engine/data_store/
 
 # Node / Frontend
 frontend/node_modules/
 frontend/dist/
 frontend/build/
-frontend/npm-debug.log*
-frontend/yarn-debug.log*
-frontend/yarn-error.log*
+*.log
 
 # Environment Variables / Secrets
 .env

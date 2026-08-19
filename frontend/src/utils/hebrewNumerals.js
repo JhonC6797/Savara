@@ -1,41 +1,40 @@
-// frontend/src/utils/hebrewNumerals.js
-
 export function toHebrewNumeral(num) {
-  if (typeof num !== 'number' || num <= 0) return num;
+  if (!num || isNaN(num) || num <= 0) return '';
 
-  let n = num;
-  let str = '';
+  const units = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+  const tens = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
+  const hundreds = ['', 'ק', 'ר', 'ש', 'ת'];
 
-  // מאות
-  while (n >= 400) { str += 'ת'; n -= 400; }
-  if (n >= 300) { str += 'ש'; n -= 300; }
-  if (n >= 200) { str += 'ר'; n -= 200; }
-  if (n >= 100) { str += 'ק'; n -= 100; }
+  const n = Number(num);
 
-  // עשרות ויחידות (טיפול במקרי ט"ו ו-ט"ז)
-  if (n === 15) {
-    str += 'טו';
-    n = 0;
-  } else if (n === 16) {
-    str += 'טז';
-    n = 0;
-  } else {
-    const tens = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ'];
-    str += tens[Math.floor(n / 10)];
-    n %= 10;
-
-    const ones = ['', 'א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
-    str += ones[n];
+  if (n % 100 === 15) {
+    const prefix = toHebrewNumeral(Math.floor(n / 100) * 100).replace(/["']/g, '');
+    return prefix + 'ט"ו';
+  }
+  if (n % 100 === 16) {
+    const prefix = toHebrewNumeral(Math.floor(n / 100) * 100).replace(/["']/g, '');
+    return prefix + 'ט"ז';
   }
 
-  if (str.length === 0) return '';
-  if (str.length === 1) return str + "'";
-  return str.slice(0, -1) + '"' + str.slice(-1);
+  let res = '';
+  let h = Math.floor(n / 100);
+  while (h > 4) {
+    res += 'ת';
+    h -= 4;
+  }
+  if (h > 0) res += hundreds[h];
+
+  let t = Math.floor((n % 100) / 10);
+  res += tens[t];
+
+  let u = n % 10;
+  res += units[u];
+
+  if (res.length === 1) return res + "'";
+  if (res.length > 1) return res.slice(0, -1) + '"' + res.slice(-1);
+  return String(num);
 }
 
-// פורמט משולב: אותיות עבריות עם מספר בסוגריים, למשל: "ה' (5)" או "רכ"ח (228)"
-export function formatHebrewUnit(num) {
-  if (!num) return '';
-  const heb = toHebrewNumeral(num);
-  return `${heb} (${num})`;
+export function formatHebrewUnit(unitNum) {
+  return toHebrewNumeral(Number(unitNum) || 1);
 }

@@ -15,11 +15,17 @@ def download_catalog_texts(catalog: list):
     all_books_metadata = response.json().get("books", [])
 
     # מיפוי שמות הספרים בקטלוג לקישורי ההורדה ב-GitHub
+    # מיפוי שמות הספרים בקטלוג לקישורי ההורדה ב-GitHub
     for book in catalog:
-        for section in book["sections"]:
+        # משיכת כל החטיבות - גם הישירות וגם אלו שתחת קטגוריות
+        all_sections = book.get("sections", [])
+        for cat in book.get("categories", []):
+            all_sections.extend(cat.get("sections", []))
+            
+        for section in all_sections:
             base_ref = section["base_ref"]
             # ניקוי תת-חלקים (כמו Part 1 או .Introduction) להתאמה מדויקת מול האינדקס
-            clean_title = base_ref.split(",")[0].split(".")[0].replace("_", " ")
+            clean_title = base_ref.split(".")[0].replace("_", " ")
             local_file_path = os.path.join(RAW_DATA_DIR, f"{base_ref}.json")
 
             if os.path.exists(local_file_path):

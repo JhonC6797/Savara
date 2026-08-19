@@ -1,9 +1,13 @@
-# backend/search_engine/vector_db.py
+import os
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 
+# הגדרת נתיב אבסולוטי לתיקיית qdrant_db בתוך backend
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEFAULT_DB_PATH = os.path.join(BASE_DIR, "qdrant_db")
+
 class VectorDBService:
-    def __init__(self, path="./qdrant_db"):
+    def __init__(self, path=DEFAULT_DB_PATH):
         self.client = QdrantClient(path=path)
         self.collection_name = "torah_texts"
 
@@ -35,15 +39,15 @@ class VectorDBService:
                 ]
             )
 
-        search_result = self.client.search(
+        response = self.client.query_points(
             collection_name=self.collection_name,
-            query_vector=query_vector,
+            query=query_vector,
             query_filter=query_filter,
             limit=limit
         )
 
         results = []
-        for hit in search_result:
+        for hit in response.points:
             results.append({
                 "score": round(hit.score * 100, 1),
                 "payload": hit.payload

@@ -36,14 +36,16 @@ export default function SearchBar({ onSelectResult }) {
     setIsModalOpen(false);
     setQuery("");
     setResults([]);
+    
     if (onSelectResult) {
-      onSelectResult(hit.payload);
+      // מעביר את פרטי הניווט המדויקים (nav) יחד עם ה-payload המלא
+      onSelectResult(hit.nav ? { ...hit.nav, payload: hit.payload } : hit.payload);
     }
   };
 
   return (
     <>
-      {/* כפתור צף בפינת המסך התחתונה (Widget) */}
+      {/* כפתור צף בפינת המסך התחתונה */}
       <button
         onClick={() => setIsModalOpen(true)}
         style={{
@@ -101,7 +103,7 @@ export default function SearchBar({ onSelectResult }) {
               boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
               overflow: "hidden"
             }}
-            onClick={(e) => e.stopPropagation()} // מניעת סגירה בלחיצה בתוך החלון
+            onClick={(e) => e.stopPropagation()}
           >
             {/* כותרת החלון */}
             <div
@@ -200,7 +202,7 @@ export default function SearchBar({ onSelectResult }) {
                   key={idx}
                   onClick={() => handleSelect(hit)}
                   style={{
-                    padding: "12px 14px",
+                    padding: "14px 16px",
                     marginBottom: "10px",
                     borderRadius: "8px",
                     border: "1px solid #e2e8f0",
@@ -211,15 +213,16 @@ export default function SearchBar({ onSelectResult }) {
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#edf2f7")}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                    <strong style={{ color: "#2b6cb0", fontSize: "14px" }}>
-                      {hit.payload.book_title} - {hit.payload.section_name} ({hit.payload.ref})
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    {/* כותרת נקייה בעברית (למשל: משנה תורה, הלכות יסודי התורה - פרק ג' הלכה י') */}
+                    <strong style={{ color: "#2b6cb0", fontSize: "15px" }}>
+                      {hit.display_title || `${hit.payload.book_title} - ${hit.payload.section_name}`}
                     </strong>
-                    <span style={{ fontSize: "12px", backgroundColor: "#ebf8ff", color: "#2b6cb0", padding: "2px 8px", borderRadius: "12px" }}>
+                    <span style={{ fontSize: "12px", backgroundColor: "#ebf8ff", color: "#2b6cb0", padding: "3px 10px", borderRadius: "12px", fontWeight: "bold" }}>
                       {hit.score}% התאמה
                     </span>
                   </div>
-                  <p style={{ margin: 0, fontSize: "14px", color: "#4a5568", lineHeight: "1.5" }}>
+                  <p style={{ margin: 0, fontSize: "14px", color: "#4a5568", lineHeight: "1.6" }}>
                     {hit.payload.text}
                   </p>
                 </div>

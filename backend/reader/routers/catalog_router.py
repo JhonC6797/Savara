@@ -1,49 +1,52 @@
-# backend/reader/catalog_router.py
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter
 from reader.data.catalog import CATALOG
-import requests
 
-router = APIRouter(prefix="/api", tags=["Reader"])
+router = APIRouter(prefix="/api", tags=["Catalog"])
 
-def get_section_meta(book_id: str, section_id: str):
-    """סריקה היררכית בקטלוג למציאת החטיבה והספר"""
+def find_section(book_id: str | None, section_id: str | None):
+    """חיפוש גמיש במיוחד לזיהוי הספר והחטיבה לפי מזהה, שם בעברית או באנגלית"""
+    if not section_id:
+        return None, None
+
+    sec_clean = str(section_id).lower().strip()
+    book_clean = str(book_id).lower().strip() if book_id else ""
+
     for book in CATALOG:
-        if book["id"] == book_id:
+        b_id = str(book.get("id", "")).lower()
+        b_title = str(book.get("title", "")).lower()
+
+        if not book_clean or book_clean == "all" or b_id == book_clean or book_clean in b_id or book_clean in b_title:
             for cat in book.get("categories", []):
                 for sec in cat.get("sections", []):
-                    if sec["id"] == section_id:
+                    s_id = str(sec.get("id", "")).lower()
+                    s_name = str(sec.get("name", "")).lower()
+                    s_ref = str(sec.get("base_ref", "")).lower()
+
+                    if sec_clean in [s_id, s_name, s_ref] or sec_clean in s_id or sec_clean in s_name or s_id in sec_clean or sec_clean in s_ref:
                         return book, sec
+
+    for book in CATALOG:
+        for cat in book.get("categories", []):
+            for sec in cat.get("sections", []):
+                s_id = str(sec.get("id", "")).lower()
+                s_name = str(sec.get("name", "")).lower()
+                s_ref = str(sec.get("base_ref", "")).lower()
+
+                if sec_clean in [s_id, s_name, s_ref] or sec_clean in s_id or sec_clean in s_name or s_id in sec_clean or sec_clean in s_ref:
+                    return book, sec
+
     return None, None
 
 @router.get("/catalog")
 def get_catalog():
     return CATALOG
 
-@router.get("/text/{book_id}/{section_id}")
-def get_text_section(book_id: str, section_id: str, unit: int = Query(1, ge=1)):
-    book, section = get_section_meta(book_id, section_id)
-    if not section:
-        raise HTTPException(status_code=404, detail="החטיבה המבוקשת לא נמצאה בקטלוג")
-
-    base_ref = section["base_ref"]
-    url = f"https://www.sefaria.org/api/v3/texts/{base_ref}.{unit}?context=0"
-    
-    try:
-        res = requests.get(url)
-        if res.status_code == 200:
-            data = res.json()
-            versions = data.get("versions", [])
-            hebrew_version = next((v for v in versions if v.get("language") == "he"), None)
-            paragraphs = hebrew_version.get("text", []) if hebrew_version else []
-            
-            if isinstance(paragraphs, str):
-                paragraphs = [paragraphs]
-                
-            return {
-                "ref": f"{base_ref}.{unit}",
-                "sections": paragraphs
-            }
-        else:
-            raise HTTPException(status_code=res.status_code, detail="הטקסט לא נמצא בספריא")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+@router.get("/catalog/{book_id}")
+@router.get("/books/{book_id}")
+@router.get("/book/{book_id}")
+def get_book_by_id(book_id: str):
+    target = book_id.lower().replace("-", "_").replace(" ", "_")
+    for book in CATALOG:
+        if book.get("id", "").lower() == target or target in book.get("id", "").lower():
+            return book
+    return {}

@@ -1,5 +1,3 @@
-// frontend/src/services/api.js
-
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const getCatalog = async () => {
@@ -14,10 +12,9 @@ export const getTextSection = async (bookId, sectionId, unit = 1) => {
   return await res.json();
 };
 
-// פונקציית החיפוש הסמנטי
 export const searchTexts = async (query, bookId = "all") => {
   if (!query || query.trim().length < 2) return [];
-  
+
   let url = `${API_BASE_URL}/api/search?q=${encodeURIComponent(query)}`;
   if (bookId && bookId !== "all") {
     url += `&book_id=${encodeURIComponent(bookId)}`;
