@@ -2,6 +2,72 @@ import React, { useState, useEffect, useRef } from 'react';
 import { toHebrewNumeral, formatHebrewUnit } from '../utils/hebrewNumerals';
 import { stripHtml } from '../utils/textUtils';
 
+function UnitNav({ unitLabel, currentUnit, maxUnits, jumpInput, setJumpInput, onJump, onUnitChange, style }) {
+  const atStart = currentUnit <= 1;
+  const atEnd = currentUnit >= maxUnits;
+
+  const arrowStyle = (disabled) => ({
+    padding: "8px 14px",
+    borderRadius: "8px",
+    border: "1px solid #cbd5e1",
+    backgroundColor: disabled ? "#e2e8f0" : "#ffffff",
+    color: disabled ? "#94a3b8" : "#1e293b",
+    cursor: disabled ? "not-allowed" : "pointer",
+    fontWeight: "bold",
+    fontSize: "13px",
+    whiteSpace: "nowrap"
+  });
+
+  return (
+    <div
+      className="dark:bg-zinc-800/60 dark:border-zinc-700/60"
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        backgroundColor: "#f8fafc",
+        padding: "10px 12px",
+        borderRadius: "10px",
+        border: "1px solid #e2e8f0",
+        gap: "8px",
+        flexWrap: "wrap",
+        width: "100%",
+        boxSizing: "border-box",
+        ...style
+      }}
+    >
+      <button onClick={() => onUnitChange(-1)} disabled={atStart} className="dark:bg-zinc-800 dark:text-slate-200" style={arrowStyle(atStart)}>
+        ◄ {unitLabel} הקודם
+      </button>
+
+      <form onSubmit={onJump} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+        <span style={{ fontSize: "13px", color: "#475569", whiteSpace: "nowrap" }} className="dark:text-zinc-300">
+          {unitLabel} {formatHebrewUnit(currentUnit)} / {maxUnits}
+        </span>
+        <input
+          type="number"
+          value={jumpInput}
+          onChange={(e) => setJumpInput(e.target.value)}
+          min={1}
+          max={maxUnits}
+          className="dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
+          style={{ width: "56px", padding: "6px", borderRadius: "6px", border: "1px solid #cbd5e1", textAlign: "center", fontSize: "13px" }}
+        />
+        <button
+          type="submit"
+          style={{ padding: "6px 12px", borderRadius: "6px", border: "none", backgroundColor: "#1e3a8a", color: "#ffffff", cursor: "pointer", fontSize: "13px", fontWeight: "bold" }}
+        >
+          עבור
+        </button>
+      </form>
+
+      <button onClick={() => onUnitChange(1)} disabled={atEnd} className="dark:bg-zinc-800 dark:text-slate-200" style={arrowStyle(atEnd)}>
+        {unitLabel} הבא ►
+      </button>
+    </div>
+  );
+}
+
 export default function ReaderView({
   textData,
   loading,
@@ -51,6 +117,16 @@ export default function ReaderView({
   const handleJump = (e) => {
     e.preventDefault();
     onJumpSubmit(jumpInput);
+  };
+
+  const navProps = {
+    unitLabel,
+    currentUnit,
+    maxUnits,
+    jumpInput,
+    setJumpInput,
+    onJump: handleJump,
+    onUnitChange
   };
 
   return (
@@ -117,97 +193,7 @@ export default function ReaderView({
         </div>
       </div>
 
-      {/* סרגל מעבר בין יחידות/פרקים */}
-      <div 
-        className="dark:bg-zinc-800/60 dark:border-zinc-700/60"
-        style={{
-          display: "flex",
-          justify: "space-between",
-          alignItems: "center",
-          backgroundColor: "#f8fafc",
-          padding: "10px 12px",
-          borderRadius: "10px",
-          marginBottom: "20px",
-          border: "1px solid #e2e8f0",
-          gap: "8px",
-          flexWrap: "wrap",
-          width: "100%",
-          boxSizing: "border-box"
-        }}
-      >
-        <button
-          onClick={() => onUnitChange(-1)}
-          disabled={currentUnit <= 1}
-          className="dark:bg-zinc-800 dark:text-slate-200"
-          style={{
-            padding: "6px 12px",
-            borderRadius: "8px",
-            border: "1px solid #cbd5e1",
-            backgroundColor: currentUnit <= 1 ? "#e2e8f0" : "#ffffff",
-            color: currentUnit <= 1 ? "#94a3b8" : "#1e293b",
-            cursor: currentUnit <= 1 ? "not-allowed" : "pointer",
-            fontWeight: "bold",
-            fontSize: "12px"
-          }}
-        >
-          ◄ {unitLabel} הקודם
-        </button>
-
-        <form onSubmit={handleJump} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-          <span style={{ fontSize: "13px", color: "#475569" }} className="dark:text-zinc-300">
-            {unitLabel} {currentUnit} ({formatHebrewUnit(currentUnit)}) / {maxUnits}:
-          </span>
-          <input
-            type="number"
-            value={jumpInput}
-            onChange={(e) => setJumpInput(e.target.value)}
-            min={1}
-            max={maxUnits}
-            className="dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
-            style={{
-              width: "50px",
-              padding: "4px 6px",
-              borderRadius: "6px",
-              border: "1px solid #cbd5e1",
-              textAlign: "center",
-              fontSize: "13px"
-            }}
-          />
-          <button
-            type="submit"
-            style={{
-              padding: "4px 10px",
-              borderRadius: "6px",
-              border: "none",
-              backgroundColor: "#1e3a8a",
-              color: "#ffffff",
-              cursor: "pointer",
-              fontSize: "12px",
-              fontWeight: "bold"
-            }}
-          >
-            עבור
-          </button>
-        </form>
-
-        <button
-          onClick={() => onUnitChange(1)}
-          disabled={currentUnit >= maxUnits}
-          className="dark:bg-zinc-800 dark:text-slate-200"
-          style={{
-            padding: "6px 12px",
-            borderRadius: "8px",
-            border: "1px solid #cbd5e1",
-            backgroundColor: currentUnit >= maxUnits ? "#e2e8f0" : "#ffffff",
-            color: currentUnit >= maxUnits ? "#94a3b8" : "#1e293b",
-            cursor: currentUnit >= maxUnits ? "not-allowed" : "pointer",
-            fontWeight: "bold",
-            fontSize: "12px"
-          }}
-        >
-          {unitLabel} הבא ►
-        </button>
-      </div>
+      <UnitNav {...navProps} style={{ marginBottom: "20px" }} />
 
       {/* גוף הטקסט */}
       <div className={fontSizeClasses} style={{ wordBreak: "break-word" }}>
@@ -238,6 +224,9 @@ export default function ReaderView({
           <p style={{ color: "#94a3b8", textAlign: "center", padding: "20px" }}>אין טקסט להצגה ביחידה זו.</p>
         )}
       </div>
+
+      {/* אותו סרגל בתחתית, בזרימת המסמך ולא צף, כדי שלא יסתיר טקסט */}
+      <UnitNav {...navProps} style={{ marginTop: "20px" }} />
     </div>
   );
 }

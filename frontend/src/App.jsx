@@ -130,6 +130,8 @@ export default function App() {
         maxWidth: "1000px",
         margin: "0 auto",
         padding: "16px",
+        // מרווח לכפתור החיפוש הצף, שאחרת מסתיר את סרגל הניווט התחתון
+        paddingBottom: "90px",
         fontFamily: "system-ui, -apple-system, sans-serif",
         direction: "rtl",
         textAlign: "right",

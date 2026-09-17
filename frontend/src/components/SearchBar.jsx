@@ -94,37 +94,8 @@ export default function SearchBar({ onSelectResult }) {
 
       {/* חלון החיפוש הקופץ (Modal Overlay) */}
       {isModalOpen && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            backdropFilter: "blur(3px)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000,
-            direction: "rtl"
-          }}
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div
-            style={{
-              backgroundColor: "#ffffff",
-              borderRadius: "12px",
-              width: "90%",
-              maxWidth: "680px",
-              maxHeight: "85vh",
-              display: "flex",
-              flexDirection: "column",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-              overflow: "hidden"
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="search-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="search-modal" onClick={(e) => e.stopPropagation()}>
             {/* כותרת החלון */}
             <div
               style={{
@@ -154,18 +125,11 @@ export default function SearchBar({ onSelectResult }) {
             {/* טופס החיפוש */}
             <div style={{ padding: "20px", borderBottom: "1px solid #f1f5f9" }}>
               <form onSubmit={handleSearch} style={{ display: "flex", gap: "10px", flexDirection: "column" }}>
-                <div style={{ display: "flex", gap: "10px" }}>
+                <div className="search-fields">
                   <select
+                    className="search-select"
                     value={selectedBook}
                     onChange={(e) => setSelectedBook(e.target.value)}
-                    style={{
-                      padding: "10px",
-                      borderRadius: "8px",
-                      border: "1px solid #cbd5e1",
-                      backgroundColor: "#ffffff",
-                      fontSize: "14px",
-                      direction: "rtl"
-                    }}
                   >
                     {BOOKS_OPTIONS.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -175,18 +139,11 @@ export default function SearchBar({ onSelectResult }) {
                   </select>
 
                   <input
+                    className="search-input"
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="הקלד שאלה או נושא (למשל: מה העניין של תשובה)..."
-                    style={{
-                      flex: 1,
-                      padding: "10px 14px",
-                      borderRadius: "8px",
-                      border: "1px solid #cbd5e1",
-                      fontSize: "15px",
-                      direction: "rtl"
-                    }}
+                    placeholder="מילה או משפט לחיפוש..."
                     autoFocus
                   />
                 </div>

@@ -3,6 +3,10 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  build: {
+    // בלי זה המיניפייר פולט @media (width<=640px), שנשבר ב-Safari מתחת ל-16.4
+    cssTarget: 'safari15'
+  },
   plugins: [
     react(),
     VitePWA({

@@ -25,3 +25,77 @@ html, body {
     color: #f8fafc !important;
   }
 }
+
+/* ===== חיפוש ===== */
+
+.search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  direction: rtl;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+.search-modal {
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  max-width: 680px;
+  max-height: 85vh;
+  overflow: hidden;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.search-fields {
+  display: flex;
+  gap: 10px;
+}
+
+.search-select,
+.search-input {
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #ffffff;
+  direction: rtl;
+  font-size: 15px;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0; /* בלי זה שדה flex מסרב להתכווץ וגולש מהמסך */
+}
+
+@media (max-width: 640px) {
+  /* מיושר לראש המסך: כשמקלדת נפתחת, מרכוז אנכי מועך את החלון */
+  .search-overlay {
+    align-items: flex-start;
+    padding: 10px;
+  }
+
+  .search-modal {
+    width: 100%;
+    max-width: none;
+    max-height: calc(100vh - 20px);
+    /* נדרס בדפדפנים שתומכים; dvh מתחשב בסרגלי הדפדפן הנייד */
+    max-height: calc(100dvh - 20px);
+  }
+
+  .search-fields {
+    flex-direction: column;
+  }
+
+  .search-select {
+    width: 100%;
+  }
+
+  .search-input {
+    font-size: 16px; /* מתחת ל-16px iOS מזים את העמוד אוטומטית */
+  }
+}
