@@ -11,7 +11,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
-from search_engine.corpus import iter_sections, load_source, unit_paragraphs
+from search_engine.corpus import clean_unit, iter_sections, load_source
 from utils.hebrew import loose_form
 
 INDEX_PATH = os.path.join(BASE_DIR, "search_index.db")
@@ -29,14 +29,16 @@ def build_rows():
     empty_sections = []
 
     for base_ref, group in by_ref.items():
-        if load_source(base_ref) is None:
+        source = load_source(base_ref)
+        if source is None:
             missing_files.append(base_ref)
             continue
+        units = source.get(base_ref, {})
 
         for section in group:
             count = 0
             for unit in range(section["start_unit"], section["end_unit"] + 1):
-                for position, body in enumerate(unit_paragraphs(base_ref, unit) or [], start=1):
+                for position, body in enumerate(clean_unit(units, unit), start=1):
                     digest = hashlib.md5(body.encode("utf-8")).hexdigest()
                     if digest in seen:
                         continue

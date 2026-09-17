@@ -5,6 +5,7 @@
 """
 import json
 import os
+from functools import lru_cache
 
 from reader.data.catalog import CATALOG
 from utils.hebrew import clean_text_formatting
@@ -72,6 +73,7 @@ def extract_units(node) -> dict[int, list[str]]:
     return units
 
 
+@lru_cache(maxsize=1)
 def load_source(base_ref: str) -> dict[str, dict[int, list[str]]] | None:
     """{sub_ref: {יחידה: [פסקאות]}}.
 
@@ -93,14 +95,18 @@ def load_source(base_ref: str) -> dict[str, dict[int, list[str]]] | None:
     return {base_ref: extract_units(text)}
 
 
-def unit_paragraphs(base_ref: str, unit: int) -> list[str] | None:
-    """הפסקאות של יחידה אחת, מנוקות ובלי ריקות.
+def clean_unit(units: dict[int, list[str]], unit: int) -> list[str]:
+    """המספור הקנוני של פסקאות ביחידה אחת.
 
-    זהו המספור הקנוני: המיקום ברשימה המוחזרת (1-based) הוא paragraph_number.
-    מחזיר None כשאין קובץ מקומי, כדי שהקורא ידע ליפול חזרה לספריא.
+    המיקום ברשימה המוחזרת (1-based) הוא paragraph_number. גם האינדקס וגם
+    הקורא חייבים לעבור דרך כאן, אחרת תוצאת חיפוש תקשר להלכה הלא נכונה.
     """
+    return [p for p in (clean_text_formatting(raw) for raw in units.get(unit, [])) if p]
+
+
+def unit_paragraphs(base_ref: str, unit: int) -> list[str] | None:
+    """הפסקאות של יחידה אחת. None כשאין קובץ מקומי, כדי שהקורא ייפול לספריא."""
     source = load_source(base_ref)
     if source is None:
         return None
-    cleaned = [clean_text_formatting(p) for p in source.get(base_ref, {}).get(unit, [])]
-    return [p for p in cleaned if p]
+    return clean_unit(source.get(base_ref, {}), unit)
