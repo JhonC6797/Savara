@@ -2,6 +2,25 @@
 import React, { useState } from "react";
 import { searchTexts } from "../services/api";
 
+const MATCH_LABELS = {
+  exact: "התאמה מדויקת",
+  all_words: "כל המילים",
+  all_words_loose: "כל המילים (בהטיות)",
+  partial: "תוצאות קרובות"
+};
+
+// ה-snippet מגיע עם « » סביב המילים שנמצאו. מפצלים ומרנדרים כאלמנטים,
+// בלי להזריק HTML, כדי לא לפתוח פרצת XSS בטקסט שמגיע מהשרת.
+function renderSnippet(snippet) {
+  return String(snippet || "")
+    .split(/«|»/)
+    .map((part, i) =>
+      i % 2 === 1
+        ? <mark key={i} style={{ backgroundColor: "#fde68a", padding: "0 2px", borderRadius: "3px" }}>{part}</mark>
+        : <span key={i}>{part}</span>
+    );
+}
+
 const BOOKS_OPTIONS = [
   { id: "all", title: "כל הספרים" },
   { id: "mishneh_torah", title: "משנה תורה (הרמב''ם)" },
@@ -15,6 +34,7 @@ export default function SearchBar({ onSelectResult }) {
   const [query, setQuery] = useState("");
   const [selectedBook, setSelectedBook] = useState("all");
   const [results, setResults] = useState([]);
+  const [matchType, setMatchType] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleSearch = async (e) => {
@@ -24,9 +44,12 @@ export default function SearchBar({ onSelectResult }) {
     setLoading(true);
     try {
       const data = await searchTexts(query, selectedBook);
-      setResults(data);
+      setResults(data.results || []);
+      setMatchType(data.match_type);
     } catch (err) {
       console.error("Search error:", err);
+      setResults([]);
+      setMatchType("error");
     } finally {
       setLoading(false);
     }
@@ -36,11 +59,8 @@ export default function SearchBar({ onSelectResult }) {
     setIsModalOpen(false);
     setQuery("");
     setResults([]);
-    
-    if (onSelectResult) {
-      // מעביר את פרטי הניווט המדויקים (nav) יחד עם ה-payload המלא
-      onSelectResult(hit.nav ? { ...hit.nav, payload: hit.payload } : hit.payload);
-    }
+    setMatchType(null);
+    onSelectResult?.(hit.nav);
   };
 
   return (
@@ -191,15 +211,21 @@ export default function SearchBar({ onSelectResult }) {
 
             {/* רשימת התוצאות */}
             <div style={{ padding: "10px 20px", overflowY: "auto", flex: 1 }}>
-              {results.length === 0 && !loading && query && (
+              {results.length === 0 && !loading && matchType && (
                 <div style={{ textAlign: "center", color: "#a0aec0", padding: "30px 0" }}>
                   לא נמצאו פסקאות מתאימות לשאילתה זו.
                 </div>
               )}
 
-              {results.map((hit, idx) => (
+              {results.length > 0 && MATCH_LABELS[matchType] && (
+                <div style={{ fontSize: "13px", color: "#64748b", padding: "4px 2px 10px" }}>
+                  {MATCH_LABELS[matchType]} · {results.length} תוצאות
+                </div>
+              )}
+
+              {results.map((hit) => (
                 <div
-                  key={idx}
+                  key={hit.ref}
                   onClick={() => handleSelect(hit)}
                   style={{
                     padding: "14px 16px",
@@ -213,17 +239,12 @@ export default function SearchBar({ onSelectResult }) {
                   onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#edf2f7")}
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#f8fafc")}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                    {/* כותרת נקייה בעברית (למשל: משנה תורה, הלכות יסודי התורה - פרק ג' הלכה י') */}
-                    <strong style={{ color: "#2b6cb0", fontSize: "15px" }}>
-                      {hit.display_title || `${hit.payload.book_title} - ${hit.payload.section_name}`}
-                    </strong>
-                    <span style={{ fontSize: "12px", backgroundColor: "#ebf8ff", color: "#2b6cb0", padding: "3px 10px", borderRadius: "12px", fontWeight: "bold" }}>
-                      {hit.score}% התאמה
-                    </span>
-                  </div>
+                  {/* כותרת נקייה בעברית (למשל: משנה תורה, הלכות יסודי התורה - פרק ג' הלכה י') */}
+                  <strong style={{ color: "#2b6cb0", fontSize: "15px", display: "block", marginBottom: "8px" }}>
+                    {hit.display_title}
+                  </strong>
                   <p style={{ margin: 0, fontSize: "14px", color: "#4a5568", lineHeight: "1.6" }}>
-                    {hit.payload.text}
+                    {renderSnippet(hit.snippet)}
                   </p>
                 </div>
               ))}

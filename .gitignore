@@ -12,6 +12,9 @@ backend/*/*/__pycache__/
 *.pyo
 *.pyd
 
+# Search index — נבנה ב-build מתוך raw_data
+backend/search_index.db
+
 # Vector DB Storage (החרגה מלאה של תיקיית הווקטורים)
 backend/qdrant_db/
 backend/search_engine/qdrant_db/

@@ -266,7 +266,7 @@
           {"id": "cm_mekach_umakkar", "name": "הלכות מקח וממכר, אונאה ומתנה (קפט-רנח)", "base_ref": "Shulchan Arukh, Choshen Mishpat", "max_units": 258, "unit_label": "סימן"},
           {"id": "cm_aveidah", "name": "הלכות אבידה ומציאה, הפקר ונחלות (רנט-רפט)", "base_ref": "Shulchan Arukh, Choshen Mishpat", "max_units": 289, "unit_label": "סימן"},
           {"id": "cm_shomerim", "name": "הלכות שומרים, שוכר ושכירות פועלים (רצא-שלח)", "base_ref": "Shulchan Arukh, Choshen Mishpat", "max_units": 338, "unit_label": "סימן"},
-          {"id": "cm_genevah_gezelah", "name": "הלכות גנבה, גזילה ונזיקין (שמח-תכז)", "base_ref": "Shulchan Arukh, Choshen Mishpat", "max_units": 425, "unit_label": "סימן"}
+          {"id": "cm_genevah_gezelah", "name": "הלכות גנבה, גזילה ונזיקין (שמח-תכז)", "base_ref": "Shulchan Arukh, Choshen Mishpat", "max_units": 427, "unit_label": "סימן"}
         ]
       }
     ]

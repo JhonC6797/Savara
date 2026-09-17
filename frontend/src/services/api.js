@@ -12,8 +12,10 @@ export const getTextSection = async (bookId, sectionId, unit = 1) => {
   return await res.json();
 };
 
+const EMPTY_SEARCH = { match_type: "none", count: 0, results: [] };
+
 export const searchTexts = async (query, bookId = "all") => {
-  if (!query || query.trim().length < 2) return [];
+  if (!query || query.trim().length < 2) return EMPTY_SEARCH;
 
   let url = `${API_BASE_URL}/api/search?q=${encodeURIComponent(query)}`;
   if (bookId && bookId !== "all") {

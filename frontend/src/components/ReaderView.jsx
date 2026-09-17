@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { toHebrewNumeral, formatHebrewUnit } from '../utils/hebrewNumerals';
 import { stripHtml } from '../utils/textUtils';
 
@@ -16,7 +16,8 @@ export default function ReaderView({
   onJumpSubmit
 }) {
   const [jumpInput, setJumpInput] = useState(String(currentUnit));
-  
+  const highlightRef = useRef(null);
+
   // טעינת גודל גופן מתוך localStorage
   const fontSize = localStorage.getItem('reader_font_size') || 'medium';
   const fontSizeClasses = {
@@ -28,6 +29,10 @@ export default function ReaderView({
   useEffect(() => {
     setJumpInput(String(currentUnit));
   }, [currentUnit]);
+
+  useEffect(() => {
+    highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [highlightParagraph, textData]);
 
   if (loading) {
     return (
@@ -212,11 +217,12 @@ export default function ReaderView({
             return (
               <p
                 key={idx}
+                ref={isHighlighted ? highlightRef : null}
                 style={{
                   padding: "8px 12px",
                   borderRadius: "8px",
-                  backgroundColor: isHighlighted ? "#fef08a" : "transparent",
-                  color: isHighlighted ? "#000000" : "inherit",
+                  // שקוף למחצה כדי שייקרא גם על רקע בהיר וגם כהה
+                  backgroundColor: isHighlighted ? "rgba(234,179,8,0.22)" : "transparent",
                   borderRight: isHighlighted ? "4px solid #eab308" : "none",
                   marginBottom: "8px"
                 }}

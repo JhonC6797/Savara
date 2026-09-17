@@ -85,10 +85,10 @@ export default function App() {
     }
   };
 
-  const handleSelectFromSearch = (payload) => {
-    const { book, section } = findSectionInCatalog(catalog, payload.book_id, payload.section_id);
+  const handleSelectFromSearch = (nav) => {
+    const { book, section } = findSectionInCatalog(catalog, nav.book_id, nav.section_id);
     if (book && section) {
-      fetchAndShowText(book, section, payload.unit_number, payload.paragraph_number);
+      fetchAndShowText(book, section, nav.unit, nav.paragraph);
     }
   };
 
